@@ -13,3 +13,11 @@ func ConnectDB() (*sql.DB, error) {
 	}
 	return db, nil
 }
+
+func checkDB() {
+	db, err := ConnectDB()
+	if err != nil {
+		panic(err)
+	}
+	db.Close()
+}
