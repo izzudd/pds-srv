@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +40,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	// apply session
 	data.Session = randomString(16)
-	_, err = db.Exec("INSERT INTO session (`session_id`, `user_id`) VALUES (?, ?)", data.Session, data.ID)
+	_, err = db.Exec("INSERT INTO session (`session_id`, `user_id`, `expired`) VALUES (?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 15 MINUTE))", data.Session, data.ID)
 	if err != nil {
 		http.Error(w, "cant assign session: "+err.Error(), 400)
 		return
