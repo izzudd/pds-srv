@@ -25,12 +25,12 @@ func main() {
 	go startSessionCleanup(serverExit, sessionCleanerExit)
 
 	// if enter pressed
-	println("\nPress enter key to shut down")
-	println("Server started at", server.Addr, "if no error occured")
+	println("\nmain: Press enter key to shut down")
+	println("main: Server started at", server.Addr, "if no error occured")
 	fmt.Scanln()
 
 	// shutdown
-	println("Server shutting down...")
+	println("main: Server shutting down...")
 	sessionCleanerExit <- 0
 	err := server.Shutdown(context.TODO())
 	if err != nil {
@@ -39,5 +39,5 @@ func main() {
 
 	// wait server to exit
 	serverExit.Wait()
-	println("Done exiting")
+	println("main: Done exiting")
 }

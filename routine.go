@@ -34,11 +34,12 @@ func startServer(wg *sync.WaitGroup) *http.Server {
 
 	go func() {
 		defer wg.Done()
-		println("Starting server...")
+		println("routine: Starting server...")
 		err := server.ListenAndServe()
 		if err != http.ErrServerClosed {
 			panic(err)
 		}
+		println("routine: Server shut down")
 	}()
 
 	return server
@@ -46,13 +47,13 @@ func startServer(wg *sync.WaitGroup) *http.Server {
 
 func startSessionCleanup(wg *sync.WaitGroup, exit <-chan int) {
 	defer wg.Done()
-	println("Starting session cleaner...")
+	println("routine: Starting session cleaner...")
 	db, err := ConnectDB()
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
-	println("Session cleaner started")
+	println("routine: Session cleaner started")
 	for {
 		select {
 		default:
@@ -61,7 +62,7 @@ func startSessionCleanup(wg *sync.WaitGroup, exit <-chan int) {
 				log.Fatal(err.Error())
 			}
 		case <-exit:
-			println("Session cleaner shut down")
+			println("routine: Session cleaner shut down")
 			return
 		}
 	}

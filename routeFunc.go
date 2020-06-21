@@ -8,6 +8,7 @@ import (
 )
 
 func login(w http.ResponseWriter, r *http.Request) {
+	println("login called")
 	defer r.Body.Close()
 	var auth authData
 	err := parseBody(r.Body, &auth)
@@ -57,6 +58,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(res)
 }
 
@@ -82,7 +84,7 @@ func vote(w http.ResponseWriter, r *http.Request) {
 	err = db.QueryRow("SELECT count(*) FROM session WHERE session_id = ? AND user_id = ?", vote.Session, vote.ID).Scan(&valid)
 	// err = db.QueryRow("SELECT count(*) FROM session WHERE session_id = 'ZRTemKMFbdOgFqhe' AND user_id = '1'").Scan(&valid)
 	if valid != 1 {
-		w.Write([]byte("invalid session"))
+		http.Error(w, "invalid session", 400)
 		return
 	}
 
@@ -90,7 +92,7 @@ func vote(w http.ResponseWriter, r *http.Request) {
 	var isVoted bool
 	err = db.QueryRow("SELECT done FROM datasiswa WHERE id = ?", vote.ID).Scan(&isVoted)
 	if isVoted {
-		w.Write([]byte("user voted"))
+		http.Error(w, "user voted", 400)
 		return
 	}
 
@@ -100,17 +102,19 @@ func vote(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "vote data not applied: "+err.Error(), 400)
 		return
 	}
-	_, err = db.Exec("UPDATE datasiswa SET done = true WHERE id = ?", vote.ID)
-	if err != nil {
-		http.Error(w, "vote data not applied: "+err.Error(), 400)
-		return
-	}
+	// set user status to voted
+	// _, err = db.Exec("UPDATE datasiswa SET done = true WHERE id = ?", vote.ID)
+	// if err != nil {
+	// 	http.Error(w, "vote data not applied: "+err.Error(), 400)
+	// 	return
+	// }
 
 	// send success response
-	w.Write([]byte("success"))
+	w.WriteHeader(200)
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
+	println("logout called")
 	defer r.Body.Close()
 	var out outData
 	err := parseBody(r.Body, &out)
@@ -135,5 +139,5 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send response if success
-	w.Write([]byte("success"))
+	w.WriteHeader(200)
 }
