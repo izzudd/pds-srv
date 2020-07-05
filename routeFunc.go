@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 func login(w http.ResponseWriter, r *http.Request) {
-	println("login called")
 	defer r.Body.Close()
 	var auth authData
 	err := parseBody(r.Body, &auth)
@@ -26,14 +25,14 @@ func login(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	var data userData
-	err = db.QueryRow("SELECT id, name FROM datasiswa WHERE username = ? AND password = ?", auth.Uname, auth.Pass).Scan(&data.ID, &data.Name)
+	err = db.QueryRow("SELECT id, name FROM public.datasiswa WHERE username = $1 AND password = $2", auth.Uname, auth.Pass).Scan(&data.ID, &data.Name)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
 
 	// delete session if exist
-	_, err = db.Exec("DELETE FROM session WHERE user_id = ?", data.ID)
+	_, err = db.Exec("DELETE FROM session WHERE user_id = $1", data.ID)
 	if err != nil {
 		http.Error(w, "session exist cant drop: "+err.Error(), 400)
 		return
@@ -41,7 +40,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	// apply session
 	data.Session = randomString(16)
-	_, err = db.Exec("INSERT INTO session (`session_id`, `user_id`, `expired`) VALUES (?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 15 MINUTE))", data.Session, data.ID)
+	_, err = db.Exec("INSERT INTO session (session_id, user_id, expired) VALUES ($1, $2, CURRENT_TIMESTAMP + INTERVAL '15 MINUTE')", data.Session, data.ID)
 	if err != nil {
 		http.Error(w, "cant assign session: "+err.Error(), 400)
 		return
@@ -52,7 +51,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "failed to send response: "+err.Error(), 500)
 		// if can't send response delete session drom table
-		_, err = db.Exec("DELETE FROM session WHERE session_id = ?", data.Session)
+		_, err = db.Exec("DELETE FROM session WHERE session_id = $1", data.Session)
 		if err != nil {
 			http.Error(w, err.Error(), 400)
 		}
@@ -81,8 +80,7 @@ func vote(w http.ResponseWriter, r *http.Request) {
 
 	// check session validity
 	var valid int
-	err = db.QueryRow("SELECT count(*) FROM session WHERE session_id = ? AND user_id = ?", vote.Session, vote.ID).Scan(&valid)
-	// err = db.QueryRow("SELECT count(*) FROM session WHERE session_id = 'ZRTemKMFbdOgFqhe' AND user_id = '1'").Scan(&valid)
+	err = db.QueryRow("SELECT count(*) FROM session WHERE session_id = $1 AND user_id = $2", vote.Session, vote.ID).Scan(&valid)
 	if valid != 1 {
 		http.Error(w, "invalid session", 400)
 		return
@@ -90,20 +88,20 @@ func vote(w http.ResponseWriter, r *http.Request) {
 
 	// check if user voted
 	var isVoted bool
-	err = db.QueryRow("SELECT done FROM datasiswa WHERE id = ?", vote.ID).Scan(&isVoted)
+	err = db.QueryRow("SELECT done FROM datasiswa WHERE id = $1", vote.ID).Scan(&isVoted)
 	if isVoted {
 		http.Error(w, "user voted", 400)
 		return
 	}
 
 	// apply vote data to db
-	_, err = db.Exec("UPDATE result SET value = value + 1 WHERE id = ?", vote.Value)
+	_, err = db.Exec("UPDATE result SET value = value + 1 WHERE id = $1", vote.Value)
 	if err != nil {
 		http.Error(w, "vote data not applied: "+err.Error(), 400)
 		return
 	}
 	// set user status to voted
-	// _, err = db.Exec("UPDATE datasiswa SET done = true WHERE id = ?", vote.ID)
+	// _, err = db.Exec("UPDATE datasiswa SET done = true WHERE id = $1", vote.ID)
 	// if err != nil {
 	// 	http.Error(w, "vote data not applied: "+err.Error(), 400)
 	// 	return
@@ -114,7 +112,6 @@ func vote(w http.ResponseWriter, r *http.Request) {
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
-	println("logout called")
 	defer r.Body.Close()
 	var out outData
 	err := parseBody(r.Body, &out)
@@ -132,7 +129,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// delete session
-	_, err = db.Exec("DELETE FROM session WHERE session_id = ? AND user_id = ?", out.Session, out.ID)
+	_, err = db.Exec("DELETE FROM session WHERE session_id = $1 AND user_id = $2", out.Session, out.ID)
 	if err != nil {
 		http.Error(w, "failed to logout: "+err.Error(), 400)
 		return

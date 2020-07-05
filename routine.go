@@ -9,8 +9,8 @@ import (
 
 	"github.com/gorilla/handlers"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 )
 
 func startServer(wg *sync.WaitGroup) *http.Server {
