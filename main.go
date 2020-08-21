@@ -40,11 +40,11 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-
 		// wait server to exit
 		serverExit.Wait()
 		println("main: Done exiting")
 	} else {
+		// blocking in production
 		println("Server Started")
 		for {
 		}

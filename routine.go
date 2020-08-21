@@ -27,7 +27,7 @@ func startServer(wg *sync.WaitGroup) *http.Server {
 	)
 	server := &http.Server{
 		Handler:      cors(r),
-		Addr:         ":" + os.Getenv("PDS_PORT"),
+		Addr:         ":" + os.Getenv("PORT"),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
