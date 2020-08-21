@@ -3,16 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	if os.Getenv("APP_STATE") != "PRODUCTION" {
-		initEnv()
-	}
+	// initEnv()
 
 	// check db connection
 	checkDB()
