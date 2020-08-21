@@ -7,7 +7,7 @@ import (
 
 // ConnectDB begin connection to database
 func ConnectDB() (*sql.DB, error) {
-	db, err := sql.Open("postgres", os.Getenv("PDS_CONNECTION_STRING"))
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		return nil, err
 	}
