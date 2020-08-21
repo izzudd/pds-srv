@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	if os.Getenv("HEROKU") != "TRUE" {
+	if os.Getenv("APP_STATE") != "PRODUCTION" {
 		initEnv()
 	}
 
