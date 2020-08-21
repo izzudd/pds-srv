@@ -3,13 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	initEnv()
+	if os.Getenv("HEROKU") != "TRUE" {
+		initEnv()
+	}
 
 	// check db connection
 	checkDB()
