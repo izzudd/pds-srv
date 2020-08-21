@@ -101,11 +101,11 @@ func vote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// set user status to voted
-	// _, err = db.Exec("UPDATE datasiswa SET done = true WHERE id = $1", vote.ID)
-	// if err != nil {
-	// 	http.Error(w, "vote data not applied: "+err.Error(), 400)
-	// 	return
-	// }
+	_, err = db.Exec("UPDATE datasiswa SET done = true WHERE id = $1", vote.ID)
+	if err != nil {
+		http.Error(w, "vote data not applied: "+err.Error(), 400)
+		return
+	}
 
 	// send success response
 	w.WriteHeader(200)
