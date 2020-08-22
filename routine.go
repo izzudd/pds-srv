@@ -19,6 +19,9 @@ func startServer(wg *sync.WaitGroup) *http.Server {
 	r.HandleFunc("/vote", vote).Methods("POST")
 	r.HandleFunc("/logout", logout).Methods("POST")
 
+	r.NotFoundHandler = http.HandlerFunc(notFound)
+	r.PathPrefix("/").Subrouter().MethodNotAllowedHandler = http.HandlerFunc(notAllowed)
+
 	cors := handlers.CORS(
 		handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"}),
 		handlers.AllowedMethods([]string{"POST"}),
@@ -66,4 +69,16 @@ func startSessionCleanup(wg *sync.WaitGroup, exit <-chan int) {
 			return
 		}
 	}
+}
+
+func notFound(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(404)
+	w.Write([]byte("Not Found"))
+}
+
+func notAllowed(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(405)
+	w.Write([]byte("Method not allowed"))
 }
