@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	initEnv()
+	// initEnv()
 
 	// check db connection
 	checkDB()

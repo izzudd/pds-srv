@@ -15,12 +15,15 @@ import (
 
 func startServer(wg *sync.WaitGroup) *http.Server {
 	r := mux.NewRouter()
-	r.HandleFunc("/login", login).Methods("POST")
-	r.HandleFunc("/vote", vote).Methods("POST")
-	r.HandleFunc("/logout", logout).Methods("POST")
+	r.HandleFunc("/api/login", login).Methods("POST")
+	r.HandleFunc("/api/vote", vote).Methods("POST")
+	r.HandleFunc("/api/logout", logout).Methods("POST")
+
+	spa := spaHandler{staticPath: "dist", indexPath: "index.html"}
+	r.PathPrefix("/").Handler(spa)
 
 	r.NotFoundHandler = http.HandlerFunc(notFound)
-	r.PathPrefix("/").Subrouter().MethodNotAllowedHandler = http.HandlerFunc(notAllowed)
+	r.PathPrefix("/api").Subrouter().MethodNotAllowedHandler = http.HandlerFunc(notAllowed)
 
 	cors := handlers.CORS(
 		handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"}),

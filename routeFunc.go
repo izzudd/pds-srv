@@ -25,9 +25,15 @@ func login(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	var data userData
-	err = db.QueryRow("SELECT id, name FROM public.datasiswa WHERE username = $1 AND password = $2", auth.Uname, auth.Pass).Scan(&data.ID, &data.Name)
+	var isVoted bool
+	err = db.QueryRow("SELECT id, name, done FROM public.datasiswa WHERE username = $1 AND password = $2", auth.Uname, auth.Pass).Scan(&data.ID, &data.Name, &isVoted)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
+		return
+	}
+	// user voted
+	if isVoted {
+		http.Error(w, "user voted", 400)
 		return
 	}
 
@@ -101,11 +107,11 @@ func vote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// set user status to voted
-	_, err = db.Exec("UPDATE datasiswa SET done = true WHERE id = $1", vote.ID)
-	if err != nil {
-		http.Error(w, "vote data not applied: "+err.Error(), 400)
-		return
-	}
+	// _, err = db.Exec("UPDATE datasiswa SET done = true WHERE id = $1", vote.ID)
+	// if err != nil {
+	// 	http.Error(w, "vote data not applied: "+err.Error(), 400)
+	// 	return
+	// }
 
 	// send success response
 	w.WriteHeader(200)
