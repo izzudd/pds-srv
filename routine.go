@@ -54,16 +54,11 @@ func startServer(wg *sync.WaitGroup) *http.Server {
 func startSessionCleanup(wg *sync.WaitGroup, exit <-chan int) {
 	defer wg.Done()
 	println("routine: Starting session cleaner...")
-	db, err := ConnectDB()
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
 	println("routine: Session cleaner started")
 	for {
 		select {
 		default:
-			_, err = db.Exec("DELETE FROM session WHERE expired < CURRENT_TIMESTAMP")
+			_, err := DB.Exec("DELETE FROM session WHERE expired < CURRENT_TIMESTAMP")
 			if err != nil {
 				log.Fatal(err.Error())
 			}

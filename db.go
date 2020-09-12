@@ -5,21 +5,18 @@ import (
 	"os"
 )
 
-// ConnectDB begin connection to database
-func ConnectDB() (*sql.DB, error) {
-	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
-}
+// DB is the databse singleton
+var DB *sql.DB
 
-func checkDB() {
+// InitDB initialize database to server
+func InitDB() {
 	println("db: Checking database connection...")
-	db, err := ConnectDB()
+	var err error
+	DB, err = sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		panic(err)
 	}
-	db.Close()
+	DB.SetMaxOpenConns(10)
+	DB.SetMaxIdleConns(5)
 	println("db: Database connection success")
 }

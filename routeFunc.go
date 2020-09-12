@@ -16,17 +16,10 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// making data in db
-	db, err := ConnectDB()
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
-	}
-	defer db.Close()
-
+	// making data in DB
 	var data userData
 	var isVoted bool
-	err = db.QueryRow("SELECT id, name, done FROM public.datasiswa WHERE username = $1 AND password = $2", auth.Uname, auth.Pass).Scan(&data.ID, &data.Name, &isVoted)
+	err = DB.QueryRow("SELECT id, name, done FROM public.datasiswa WHERE username = $1 AND password = $2", auth.Uname, auth.Pass).Scan(&data.ID, &data.Name, &isVoted)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
@@ -38,7 +31,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// delete session if exist
-	_, err = db.Exec("DELETE FROM session WHERE user_id = $1", data.ID)
+	_, err = DB.Exec("DELETE FROM session WHERE user_id = $1", data.ID)
 	if err != nil {
 		http.Error(w, "session exist cant drop: "+err.Error(), 400)
 		return
@@ -46,7 +39,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	// apply session
 	data.Session = randomString(16)
-	_, err = db.Exec("INSERT INTO session (session_id, user_id, expired) VALUES ($1, $2, CURRENT_TIMESTAMP + INTERVAL '15 MINUTE')", data.Session, data.ID)
+	_, err = DB.Exec("INSERT INTO session (session_id, user_id, expired) VALUES ($1, $2, CURRENT_TIMESTAMP + INTERVAL '15 MINUTE')", data.Session, data.ID)
 	if err != nil {
 		http.Error(w, "cant assign session: "+err.Error(), 400)
 		return
@@ -57,7 +50,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "failed to send response: "+err.Error(), 500)
 		// if can't send response delete session drom table
-		_, err = db.Exec("DELETE FROM session WHERE session_id = $1", data.Session)
+		_, err = DB.Exec("DELETE FROM session WHERE session_id = $1", data.Session)
 		if err != nil {
 			http.Error(w, err.Error(), 400)
 		}
@@ -76,17 +69,9 @@ func vote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// init db to communicate
-	db, err := ConnectDB()
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
-	}
-	defer db.Close()
-
 	// check session validity
 	var valid int
-	err = db.QueryRow("SELECT count(*) FROM session WHERE session_id = $1 AND user_id = $2", vote.Session, vote.ID).Scan(&valid)
+	err = DB.QueryRow("SELECT count(*) FROM session WHERE session_id = $1 AND user_id = $2", vote.Session, vote.ID).Scan(&valid)
 	if valid != 1 {
 		http.Error(w, "invalid session", 400)
 		return
@@ -94,20 +79,20 @@ func vote(w http.ResponseWriter, r *http.Request) {
 
 	// check if user voted
 	var isVoted bool
-	err = db.QueryRow("SELECT done FROM datasiswa WHERE id = $1", vote.ID).Scan(&isVoted)
+	err = DB.QueryRow("SELECT done FROM datasiswa WHERE id = $1", vote.ID).Scan(&isVoted)
 	if isVoted {
 		http.Error(w, "user voted", 400)
 		return
 	}
 
-	// apply vote data to db
-	_, err = db.Exec("UPDATE result SET value = value + 1 WHERE id = $1", vote.Value)
+	// apply vote data to DB
+	_, err = DB.Exec("UPDATE result SET value = value + 1 WHERE id = $1", vote.Value)
 	if err != nil {
 		http.Error(w, "vote data not applied: "+err.Error(), 400)
 		return
 	}
 	// set user status to voted
-	// _, err = db.Exec("UPDATE datasiswa SET done = true WHERE id = $1", vote.ID)
+	// _, err = DB.Exec("UPDATE datasiswa SET done = true WHERE id = $1", vote.ID)
 	// if err != nil {
 	// 	http.Error(w, "vote data not applied: "+err.Error(), 400)
 	// 	return
@@ -126,16 +111,8 @@ func logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// init db to communicate
-	db, err := ConnectDB()
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
-	}
-	defer db.Close()
-
 	// delete session
-	_, err = db.Exec("DELETE FROM session WHERE session_id = $1 AND user_id = $2", out.Session, out.ID)
+	_, err = DB.Exec("DELETE FROM session WHERE session_id = $1 AND user_id = $2", out.Session, out.ID)
 	if err != nil {
 		http.Error(w, "failed to logout: "+err.Error(), 400)
 		return

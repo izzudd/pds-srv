@@ -9,10 +9,10 @@ import (
 )
 
 func main() {
-	// initEnv()
+	initEnv()
 
-	// check db connection
-	checkDB()
+	// init db connection
+	InitDB()
 
 	serverExit := &sync.WaitGroup{}
 	serverExit.Add(2)
@@ -41,5 +41,7 @@ func main() {
 	}
 	// wait server to exit
 	serverExit.Wait()
+	DB.Close()
+	println("main: Database Disconnected")
 	println("main: Done exiting")
 }
