@@ -77,26 +77,21 @@ func vote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if user voted
-	var isVoted bool
-	err = DB.QueryRow("SELECT done FROM datasiswa WHERE id = $1", vote.ID).Scan(&isVoted)
-	if isVoted {
-		http.Error(w, "user voted", 400)
-		return
-	}
-
 	// apply vote data to DB
 	_, err = DB.Exec("UPDATE result SET value = value + 1 WHERE id = $1", vote.Value)
 	if err != nil {
 		http.Error(w, "vote data not applied: "+err.Error(), 400)
 		return
 	}
+
 	// set user status to voted
-	// _, err = DB.Exec("UPDATE datasiswa SET done = true WHERE id = $1", vote.ID)
-	// if err != nil {
-	// 	http.Error(w, "vote data not applied: "+err.Error(), 400)
-	// 	return
-	// }
+	_, err = DB.Exec("UPDATE datasiswa SET done = true WHERE id = $1", vote.ID)
+	if err != nil {
+		// failed to vote. substract from value
+		DB.Exec("UPDATE result SET value = value - 1 WHERE id = $1", vote.Value)
+		http.Error(w, "vote data not applied: "+err.Error(), 400)
+		return
+	}
 
 	// send success response
 	w.WriteHeader(200)
