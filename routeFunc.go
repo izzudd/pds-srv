@@ -77,6 +77,14 @@ func vote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// set user voted
+	var isVoted bool
+	err = DB.QueryRow("SELECT done FROM datasiswa WHERE id = $1", vote.ID).Scan(&isVoted)
+	if isVoted {
+		http.Error(w, "user voted", 400)
+		return
+	}
+
 	// apply vote data to DB
 	_, err = DB.Exec("UPDATE result SET value = value + 1 WHERE id = $1", vote.Value)
 	if err != nil {
