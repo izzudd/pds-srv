@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	_ "github.com/lib/pq"
@@ -133,8 +134,8 @@ func getResult(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type ress struct {
-		id  int `json:"id"`
-		val int `json:"val"`
+		id  int
+		val int
 	}
 
 	var res []ress
@@ -149,6 +150,9 @@ func getResult(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to send response: "+err.Error(), 500)
 		return
 	}
+
+	fmt.Println(res)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(result)
 }
