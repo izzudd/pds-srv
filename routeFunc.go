@@ -142,7 +142,7 @@ func getResult(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var id, val int
 		rows.Scan(&id, &val)
-		res = append(res, ress{id: id, val: val})
+		res = append(res, ress{ID: id, Val: val})
 	}
 
 	result, err := json.Marshal(res)
