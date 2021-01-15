@@ -124,3 +124,31 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	// send response if success
 	w.WriteHeader(200)
 }
+
+func getResult(w http.ResponseWriter, r *http.Request) {
+	rows, err := DB.Query("SELECT * FROM result")
+	if err != nil {
+		http.Error(w, "Failed to get data: "+err.Error(), 400)
+	}
+	defer rows.Close()
+
+	type ress struct {
+		id  int `json:"id"`
+		val int `json:"val"`
+	}
+
+	var res []ress
+	for rows.Next() {
+		var id, val int
+		rows.Scan(&id, &val)
+		res = append(res, ress{id: id, val: val})
+	}
+
+	result, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, "failed to send response: "+err.Error(), 500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(result)
+}

@@ -18,6 +18,7 @@ func startServer(wg *sync.WaitGroup) *http.Server {
 	r.HandleFunc("/api/login", login).Methods("POST")
 	r.HandleFunc("/api/vote", vote).Methods("POST")
 	r.HandleFunc("/api/logout", logout).Methods("POST")
+	r.HandleFunc("/api/result", getResult).Methods("GET")
 
 	spa := spaHandler{staticPath: "dist", indexPath: "index.html"}
 	r.PathPrefix("/").Handler(spa)
