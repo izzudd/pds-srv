@@ -134,8 +134,8 @@ func getResult(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type ress struct {
-		id  int
-		val int
+		ID  int `json:"id"`
+		Val int `json:"val"`
 	}
 
 	var res []ress
